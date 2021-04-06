@@ -3,16 +3,24 @@ const ctx = canvas.getContext('2d');
 const colors = document.querySelector('.controls__colors');
 const range = document.querySelector('#jsRange');
 const modeButton = document.querySelector('#jsMode');
+const saveButton = document.querySelector('#jsSave');
 
-canvas.width = 700;
-canvas.height = 500;
+const INITIAL_COLOR = '#2c2c2c';
+const CANVAS_WIDTH = 700;
+const CANVAS_HEIGHT = 500;
+
+canvas.width = CANVAS_WIDTH;
+canvas.height = CANVAS_HEIGHT;
+
+ctx.fillStyle = 'white';
+ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
 ctx.lineWidth = 2.5;
-ctx.strokeStyle = '#2c2c2c';
+ctx.strokeStyle = INITIAL_COLOR;
+ctx.fillStyle = INITIAL_COLOR;
 
 let isPainting = false;
 let isFillMode = false;
-
 
 const stopPainting = () => {
   isPainting = false;
@@ -23,6 +31,8 @@ const startPainting = () => {
 }
 
 function onMouseMove(event) {
+  if (isFillMode) return;
+
   const x = event.offsetX;
   const y = event.offsetY;
 
@@ -35,21 +45,27 @@ function onMouseMove(event) {
   }
 }
 
-function onMouseDown(event) {
+function onMouseDown() {
   startPainting();
 }
 
-function onMouseUp(event) {
+function onMouseUp() {
   stopPainting();
 }
 
-
+function fillCanvas() {
+  if (isFillMode) {
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  }
+}
 
 if (canvas) {
   canvas.addEventListener('mousemove', onMouseMove);
   canvas.addEventListener('mousedown', onMouseDown);
   canvas.addEventListener('mouseup', stopPainting);
   canvas.addEventListener('mouseleave', stopPainting);
+  canvas.addEventListener('click', fillCanvas);
+  canvas.oncontextmenu = () => false;
 }
 
 colors.addEventListener('click', event => {
@@ -57,8 +73,9 @@ colors.addEventListener('click', event => {
 
   if (color && event.target.classList.contains('controls__color')) {
     ctx.strokeStyle = color;
+    ctx.fillStyle = color;
   }
-})
+});
 
 range.addEventListener('change', () => {
   ctx.lineWidth = range.value;
@@ -67,9 +84,18 @@ range.addEventListener('change', () => {
 modeButton.addEventListener('click', () => {
   if (isFillMode) {
     isFillMode = false;
-    modeButton.textContent = 'Заливка';
+    modeButton.textContent = 'Рисование';
   } else {
     isFillMode = true;
-    modeButton.textContent = 'Рисование';
+    modeButton.textContent = 'Заливка';
   }
 })
+
+saveButton.addEventListener('click', () => {
+  const format = 'png';
+  const image = canvas.toDataURL(`image/${format}`);
+  const link = document.createElement('a');
+  link.href = image;
+  link.download = `PaintJS [Export].${format}`;
+  link.click();
+});
